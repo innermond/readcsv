@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title></title>
+  </head>
+
+  <body>
+    <input type="file" id="fh" />
+    <script type="module" src="parse.js"></script>
+<script type="module">
+import readfile from './parse.js';
+
+const $fh = document.querySelector('#fh');
+$fh.addEventListener('input', async () => {
+
+  performance.clearMarks();
+  performance.clearMeasures();
+  const size = 4;//1024*1024*10;
+  const f = $fh.files[0];
+  let n = 0;
+  readfile(f, size, ([row, err]) => {
+    console.log(row, err);
+    n++;
+  }, () => {
+    performance.mark('end-parsing-csv');
+    performance.measure('parsing-csv', 'start-parsing-csv', 'end-parsing-csv');
+    console.dir(performance.getEntriesByName('parsing-csv')[0]);
+    console.log(n);
+  }, {skipEmptyLine: false});
+  performance.mark('start-parsing-csv');
+
+});
+
+  function tt(name) {
+    const ee = performance.getEntriesByName(name);
+    const sum = ee.reduce((acc, v) => acc + v.duration, 0);
+    const avg = sum / ee.length;
+    return [name, sum/1000, avg];
+  }
+</script>
+    </body>
+  </html>
