@@ -31,13 +31,15 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
 function getCSVFieldsParser(rowFn, config) {
 
   if (config?.constructor === Object) {
-    var {quote, fep, eol, skipEmptyLine} = config;
+    var {quote, fep, eol, skipEmptyLine, surroundingSpace} = config;
   } 
   // config defaults
   quote = quote ?? '"';
   fep = fep ?? ',';
   eol = eol ?? '\n';
   skipEmptyLine = skipEmptyLine ?? true;
+  // white space arounf field is significant
+  surroundingSpace = surroundingSpace ?? true;
 
   const quotlen = quote.length;
   const feplen = fep.length;
@@ -101,10 +103,12 @@ function getCSVFieldsParser(rowFn, config) {
         }
 
         let _pos = pos;
-        while (ch === " ") {
-          pos++;
-          at = pos;
-          ch = raw.slice(pos, pos + 1);
+        if ( ! surroundingSpace) {
+          while (ch === " ") {
+            pos++;
+            at = pos;
+            ch = raw.slice(pos, pos + 1);
+          }
         }
 
         quoted = ch === quote;
@@ -191,56 +195,74 @@ function getCSVFieldsParser(rowFn, config) {
         }
         clarified = false;
       }
-      // pos is of found quote
+      // pos is of the found quote
+      // after is position after the quote found
+      // it is expected to be of a field separator
       let after = pos + quotlen;
-      // next pos of field separator expected after quote found above
-      ch = raw.slice(after, after + feplen);
-      // most probable
-      if (ch === fep) {
-        pos = after + feplen;
-        after = pos;
-      } else {
-        // maybe an eol?
-        ch = raw.slice(after, after + eollen);
-        if (ch == eol) {
-          pos = after + eollen;
+      while(after < raw.length) {
+        ch = raw.slice(after, after + feplen);
+        // most probable
+        if (ch === fep) {
+          pos = after + feplen;
           after = pos;
         } else {
-          // maybe some eroneous white spaces
-          ch = raw.slice(after, after + 1);
-          // eat all ws if any
-          while (ch === " ") {
-            after++;
-            ch = raw.slice(after, after + 1);
+          let after0 = after;
+
+          // maybe an eol? the next most probable sequence to be
+          ch = raw.slice(after, after + eollen);
+          if (ch == eol) {
+            pos = after + eollen;
+            after = pos;
+          } else { // here ch is not fep oe eol
+            // TODO surroundingSpace is always true
+            if ( ! surroundingSpace) {
+              // maybe some eroneous white spaces
+              ch = raw.slice(after, after + 1);
+              // eat all ws if any
+              while (ch === " ") {
+                after++;
+                ch = raw.slice(after, after + 1);
+              }
+              // 
+              if (ch === fep) {
+                after = after + feplen;
+                pos = after;
+              } else if(ch === eol) {
+                after = after + eollen;
+                pos = after;
+              }
+              if ( ['', fep, eol].includes(ch)) {
+                break;
+              }
+            }
+            // maybe we found a quote
+            while (ch === quote) {
+              after += quotlen;
+              ch = raw.slice(after, after + quotlen);
+            }
+            // no significant sequence so far
+            let after0 = raw.indexOf(quote, after);
+            if (after0 !== -1) {
+              after = after0;
+            } else {
+              after++;
+            }
           }
-          if (ch === fep) {
-            after = after + feplen;
-            pos = after;
-          } else if(ch === eol) {
-            after = after + eollen;
-            pos = after;
-          }
-          if ( ! ['', fep, eol].includes(ch)) {
-            errors.push(new Error(`line ${numLine}: unexpected "${ch} "`));
-          }
-        }
-      } 
-      // found a quote
-      while (ch === quote) {
-        after += quotlen;
-        ch = raw.slice(after, after + quotlen);
-      }
-      // raw is too short, need more raw
-      if (ch === '') {
-        rest = raw.slice(at);
-        if ( ! clarified) {
-          pos -= at;
-          return;
         }
 
-        pos = rest.length;
-        return;
-      } 
+        // raw is too short, need more raw
+        if (ch === '') {
+          rest = raw.slice(at);
+          if ( ! clarified) {
+            pos -= at;
+            return;
+          }
+
+          pos = rest.length;
+          return;
+        } 
+      }
+      after = pos + quotlen;
       
       field = raw.slice(at, pos);
       row.push(field);

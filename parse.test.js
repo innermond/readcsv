@@ -134,7 +134,7 @@ tests(unquotedIdealWithConfig);
 tests(unquotedMalformed);
 
 const quotedIdeal = {
-  /*'ideal quoted fields': testEqDefaultConfig(
+  'ideal quoted fields': testEqDefaultConfig(
     '"a","b","c","d"\n"e","f","g","h"\n',
     [
       ['"a",', '"b",', '"c",', '"d"\n'], 
@@ -161,7 +161,7 @@ const quotedIdeal = {
       ['"a",', '"b has , and \n",', '"c",', '"d"\n'], 
       ['"e",', '"f",', '"g",', '"h"\n'],
     ]),
-*/
+
   'ideal quoted fields containing new lines and commas keep empty lines': testEqCustomConfig(
     '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
     [
@@ -175,6 +175,13 @@ const quotedIdeal = {
     ],
     {skipEmptyLine: false,},
   ),
+
+  'leading spaces are kept for quoted fields': testEqDefaultConfig(
+    '      "a" , "b" , "c", "d"     \n"e"     ,    "f" , "g",    "h"\n',
+    [
+      ['      "a" ,', ' "b" ,', ' "c",', ' "d"     \n'], 
+      ['"e"     ,', '    "f" ,', ' "g",', '    "h"\n'],
+    ]),
 };
 
 tests(quotedIdeal);
