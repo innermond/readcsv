@@ -1,9 +1,10 @@
 #!/bin/sh
 echo "pre-commit: prettify"
 HERE="$(dirname "$0")"
-
+echo $HERE
 # recruit interested filenames
 FILES=$(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g')
+echo $FILES
 [ -z "$FILES" ] && exit 0
 
 # Prettify all selected files

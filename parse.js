@@ -7,7 +7,7 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
     const chunk = evt.target.result;
 
     parser(chunk);
-    
+
     offset += chunk.length;
     if (offset < file.size) {
       readNextChunk();
@@ -16,7 +16,7 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
     }
   };
 
-  r.onerror = function () {
+  r.onerror = function  () {
     console.log(r.error);
   };
 
@@ -26,17 +26,16 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
   }
 
   readNextChunk();
-};
+}
 
 function getCSVFieldsParser(rowFn, config) {
-
   if (config?.constructor === Object) {
-    var {quote, fep, eol, skipEmptyLine, surroundingSpace} = config;
-  } 
+    var { quote, fep, eol, skipEmptyLine, surroundingSpace } = config;
+  }
   // config defaults
   quote = quote ?? '"';
-  fep = fep ?? ',';
-  eol = eol ?? '\n';
+  fep = fep ?? ",";
+  eol = eol ?? "\n";
   skipEmptyLine = skipEmptyLine ?? true;
   // white space arounf field is significant
   surroundingSpace = surroundingSpace ?? true;
@@ -49,18 +48,17 @@ function getCSVFieldsParser(rowFn, config) {
   let errors = [];
   let numLine = 0;
 
-
   //field's state
   // content
-  let field = '';
+  let field = "";
   // the situation of quote found is not clear
   let clarified = false;
   // field is quoted
   let quoted = false;
   // field has been opened, we need to find where to ends according to beeing quoted or not
-  let inside = false; 
+  let inside = false;
   // position where field has been opened
-  let at = 0; 
+  let at = 0;
 
   let chunkFirst = true;
 
@@ -68,14 +66,13 @@ function getCSVFieldsParser(rowFn, config) {
   let newline;
 
   let raw;
-  let rest = '';
+  let rest = "";
   let pos = 0;
   let ch;
 
   function parseCSVChunk(chunk) {
-
     raw = rest + chunk;
-    rest = '';
+    rest = "";
 
     if (chunkFirst) {
       ch = raw.slice(at, at + quotlen);
@@ -88,14 +85,13 @@ function getCSVFieldsParser(rowFn, config) {
     }
 
     // parsing loop
-    while(pos < raw.length) {
-
+    while (pos < raw.length) {
       // begining of a field
       // as inside is changed to false by code executed when a field is done parsed
-      if ( ! inside) {
+      if (!inside) {
         ch = raw.slice(pos, pos + quotlen);
         // not enough raw
-        if (ch === '') {
+        if (ch === "") {
           rest = raw.slice(at);
           at = 0;
           pos = rest.length;
@@ -103,7 +99,7 @@ function getCSVFieldsParser(rowFn, config) {
         }
 
         let _pos = pos;
-        if ( ! surroundingSpace) {
+        if (!surroundingSpace) {
           while (ch === " ") {
             pos++;
             at = pos;
@@ -129,17 +125,17 @@ function getCSVFieldsParser(rowFn, config) {
 
         if (sep !== -1) {
           pos = sep + fep.length;
-          field = raw.slice(at, pos -1*feplen);
+          field = raw.slice(at, pos - 1 * feplen);
           // field has one/many eol?
           let eolx = field.indexOf(eol);
           while (eolx !== -1) {
             const fieldAtEnd = field.slice(0, eolx);
             row.push(fieldAtEnd);
-            const skip = skipEmptyLine && row.length === 1 && row[0] === '';
-            if ( ! skip) {
+            const skip = skipEmptyLine && row.length === 1 && row[0] === "";
+            if (!skip) {
               checkOuoteInsideQuotedFieldError(fieldAtEnd);
-              if ( ! surroundingSpace) {
-                row.forEach((el,i) => row[i] = el.trim());
+              if (!surroundingSpace) {
+                row.forEach((el, i) => (row[i] = el.trim()));
               }
               rowFn([row, errors]);
               numLine++;
@@ -163,11 +159,11 @@ function getCSVFieldsParser(rowFn, config) {
           field = raw.slice(at, newline);
           row.push(field);
           at = pos;
-          const skip = skipEmptyLine && row.length === 1 && row[0] === '';
-          if ( ! skip) {
+          const skip = skipEmptyLine && row.length === 1 && row[0] === "";
+          if (!skip) {
             checkOuoteInsideQuotedFieldError(field);
-            if ( ! surroundingSpace) {
-              row.forEach((el,i) => row[i] = el.trim());
+            if (!surroundingSpace) {
+              row.forEach((el, i) => (row[i] = el.trim()));
             }
             rowFn([row, errors]);
             numLine++;
@@ -183,7 +179,7 @@ function getCSVFieldsParser(rowFn, config) {
           rest = raw.slice(at);
           at = 0;
           pos = rest.length;
-          return;  
+          return;
         }
         continue;
       }
@@ -205,7 +201,7 @@ function getCSVFieldsParser(rowFn, config) {
       // after is position after the quote found
       // it is expected to be of a field separator
       let after = pos + quotlen;
-      while(after < raw.length) {
+      while (after < raw.length) {
         ch = raw.slice(after, after + feplen);
         // most probable
         if (ch === fep) {
@@ -219,9 +215,10 @@ function getCSVFieldsParser(rowFn, config) {
           if (ch == eol) {
             pos = after + eollen;
             after = pos;
-          } else { // here ch is not fep oe eol
+          } else {
+            // here ch is not fep oe eol
             // TODO surroundingSpace is always true
-            if ( ! surroundingSpace) {
+            if (!surroundingSpace) {
               // maybe some eroneous white spaces
               ch = raw.slice(after, after + 1);
               // eat all ws if any
@@ -229,15 +226,15 @@ function getCSVFieldsParser(rowFn, config) {
                 after++;
                 ch = raw.slice(after, after + 1);
               }
-              // 
+              //
               if (ch === fep) {
                 after = after + feplen;
                 pos = after;
-              } else if(ch === eol) {
+              } else if (ch === eol) {
                 after = after + eollen;
                 pos = after;
               }
-              if ( ['', fep, eol].includes(ch)) {
+              if (["", fep, eol].includes(ch)) {
                 break;
               }
             }
@@ -257,51 +254,53 @@ function getCSVFieldsParser(rowFn, config) {
         }
 
         // raw is too short, need more raw
-        if (ch === '') {
+        if (ch === "") {
           rest = raw.slice(at);
-          if ( ! clarified) {
+          if (!clarified) {
             pos -= at;
             return;
           }
 
           pos = rest.length;
           return;
-        } 
+        }
       }
       after = pos + quotlen;
-      
+
       field = raw.slice(at, pos);
-      if (field.slice(-1*feplen) === fep) { 
-        row.push(field.slice(0, -1*feplen));
+      if (field.slice(-1 * feplen) === fep) {
+        row.push(field.slice(0, -1 * feplen));
       }
 
-      ch = field.slice(-1*eol.length);
+      ch = field.slice(-1 * eol.length);
       if (ch === eol) {
-        row.push(field.slice(0, -1*eollen));
+        row.push(field.slice(0, -1 * eollen));
         rowFn([row, errors]);
         numLine++;
         row = [];
         errors = [];
-      } 
+      }
 
       pos = after;
       inside = false;
       at = pos;
       clarified = true;
-    }       
+    }
     // exhausted raw so refresh its minions
-    rest = '';
+    rest = "";
     pos = 0;
     at = 0;
   }
 
   function checkOuoteInsideQuotedFieldError(field) {
     if (field.indexOf(quote) !== -1) {
-      errors.push(new Error(`field "${field.slice(0, 10)} ..." of record ${numLine + 1} contains unexpected [${quote}]`));
+      errors.push(
+        new Error(
+          `field "${field.slice(0, 10)} ..." of record ${numLine + 1} contains unexpected [${quote}]`,
+        ),
+      );
     }
   }
 
   return parseCSVChunk;
 }
-
-
