@@ -129,15 +129,18 @@ function getCSVFieldsParser(rowFn, config) {
 
         if (sep !== -1) {
           pos = sep + fep.length;
-          field = raw.slice(at, pos);
+          field = raw.slice(at, pos -1*feplen);
           // field has one/many eol?
           let eolx = field.indexOf(eol);
           while (eolx !== -1) {
-            const fieldAtEnd = field.slice(0, eolx + eol.length);
+            const fieldAtEnd = field.slice(0, eolx);
             row.push(fieldAtEnd);
-            const skip = skipEmptyLine && row.length === 1 && row[0] === eol;
+            const skip = skipEmptyLine && row.length === 1 && row[0] === '';
             if ( ! skip) {
               checkOuoteInsideQuotedFieldError(fieldAtEnd);
+              if ( ! surroundingSpace) {
+                row.forEach((el,i) => row[i] = el.trim());
+              }
               rowFn([row, errors]);
               numLine++;
             }
@@ -157,12 +160,15 @@ function getCSVFieldsParser(rowFn, config) {
         newline = raw.indexOf(eol, pos);
         if (newline !== -1) {
           pos = newline + eol.length;
-          field = raw.slice(at, pos);
+          field = raw.slice(at, newline);
           row.push(field);
           at = pos;
-          const skip = skipEmptyLine && row.length === 1 && row[0] === eol;
+          const skip = skipEmptyLine && row.length === 1 && row[0] === '';
           if ( ! skip) {
             checkOuoteInsideQuotedFieldError(field);
+            if ( ! surroundingSpace) {
+              row.forEach((el,i) => row[i] = el.trim());
+            }
             rowFn([row, errors]);
             numLine++;
           }
