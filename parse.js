@@ -16,7 +16,7 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
     }
   };
 
-  r.onerror = function() {
+  r.onerror = function () {
     console.log(r.error);
   };
 
