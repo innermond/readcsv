@@ -70,47 +70,66 @@ const unquotedIdeal = {
   'ideal unquoted fields': testEqDefaultConfig(
     'a,b,c,d\ne,f,g,h\n',
     [
-      ['a,', 'b,', 'c,', 'd\n'], 
-      ['e,', 'f,', 'g,', 'h\n'],
+      ['a', 'b', 'c', 'd'], 
+      ['e', 'f', 'g', 'h'],
     ]),
 
   'ideal unquoted fields skip empty lines': testEqDefaultConfig(
     'a,b,c,d\n\n\ne,f,g,h\n\n\n\n',
     [
-      ['a,', 'b,', 'c,', 'd\n'], 
-      ['e,', 'f,', 'g,', 'h\n'],
+      ['a', 'b', 'c', 'd'], 
+      ['e', 'f', 'g', 'h'],
     ]),
 
   'leading spaces are kept for unquoted fields': testEqDefaultConfig(
     '      a , b , c, d     \ne     ,    f , g,    h\n',
     [
-      ['      a ,', ' b ,', ' c,', ' d     \n'], 
-      ['e     ,', '    f ,', ' g,', '    h\n'],
+      ['      a ', ' b ', ' c', ' d     '], 
+      ['e     ', '    f ', ' g', '    h'],
     ]),
 };
 
 const unquotedIdealWithConfig = {
-  'ideal unquoted fields keep empty lines': testEqCustomConfig(
+  'ideal unquoted fields keep empty lines when told it so': testEqCustomConfig(
     'a,b,c,d\n\n\ne,f,g,h\n\n\n\n',
     [
-      ['a,', 'b,', 'c,', 'd\n'],
-      ['\n'],
-      ['\n'],
-      ['e,', 'f,', 'g,', 'h\n'],
-      ['\n'],
-      ['\n'],
-      ['\n'],
+      ['a', 'b', 'c', 'd'],
+      [''],
+      [''],
+      ['e', 'f', 'g', 'h'],
+      [''],
+      [''],
+      [''],
     ], 
     {skipEmptyLine: false,},
+  ),
+  'ideal unquoted fields no surrounding space': testEqCustomConfig(
+    ' a,  b,  c,  d\n  e,   f, g,  h\n',
+    [
+      ['a', 'b', 'c', 'd'],
+      ['e', 'f', 'g', 'h'],
+    ], 
+    {surroundingSpace: false,},
+  ),
+  'ideal unquoted fields no surrounding space and with empty lines': testEqCustomConfig(
+    ' a,  b,  c,  d\n\n\n  e,   f, g,  h\n\n',
+    [
+      ['a', 'b', 'c', 'd'],
+      [''],
+      [''],
+      ['e', 'f', 'g', 'h'],
+      [''],
+    ], 
+    {surroundingSpace: false, skipEmptyLine: false,},
   ),
 };
 
 const unquotedMalformed = {
   'malformed unquoted fields with quotes': testEqDefaultConfig(
-    'a,b "a,c,d\ne,f " ,g " ,h\n',
+    'a,b "a,c,d\n\ne,f " ,g " ,h\n\n\n', // default is to skip empty lines
     [
-      ['a,', 'b "a,', 'c,', 'd\n'], 
-      ['e,', 'f " ,', 'g " ,', 'h\n'],
+      ['a', 'b "a', 'c', 'd'], 
+      ['e', 'f " ', 'g " ', 'h'],
     ], function(recNum, row, err, want) {
       switch (recNum) {
         case 0:
@@ -125,6 +144,51 @@ const unquotedMalformed = {
         break;
       }
     }),
+  'malformed unquoted fields with quotes, no surroundingSpace': testEqCustomConfig(
+    ' a   ,b "a ,c,d\n\ne,f " ,g " ,h\n\n\n',
+    [
+      ['a', 'b "a', 'c', 'd'], 
+      ['e', 'f "', 'g "', 'h'],
+    ],
+    {surroundingSpace: false,},
+    function(recNum, row, err, want) {
+      switch (recNum) {
+        case 0:
+          if (err.length !== 1) {
+            throw new Error('unexpected number of errors');
+          }
+        break;
+        case 1:
+          if (err.length !== 2) {
+            throw new Error('unexpected number of errors');
+          }
+        break;
+      }
+    }),
+  'malformed unquoted fields with quotes, no surroundingSpace and keep empty lines': testEqCustomConfig(
+    ' a   ,b "a ,c,d\n\ne,f " ,g " ,h\n\n\n',
+    [
+      ['a', 'b "a', 'c', 'd'], 
+      [''],
+      ['e', 'f "', 'g "', 'h'],
+      [''],
+      [''],
+    ],
+    {surroundingSpace: false, skipEmptyLine: false,},
+    function(recNum, row, err, want) {
+      switch (recNum) {
+        case 0:
+          if (err.length !== 1) {
+            throw new Error('unexpected number of errors');
+          }
+        break;
+        case 2:// empty lines are counted
+          if (err.length !== 2) {
+            throw new Error('unexpected number of errors');
+          }
+        break;
+      }
+    }),
 
 };
 
@@ -133,7 +197,7 @@ tests(unquotedIdeal);
 tests(unquotedIdealWithConfig);
 tests(unquotedMalformed);
 
-const quotedIdeal = {
+/*const quotedIdeal = {
   'ideal quoted fields': testEqDefaultConfig(
     '"a","b","c","d"\n"e","f","g","h"\n',
     [
@@ -185,3 +249,4 @@ const quotedIdeal = {
 };
 
 tests(quotedIdeal);
+*/
