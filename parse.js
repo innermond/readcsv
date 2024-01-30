@@ -201,70 +201,70 @@ function getCSVFieldsParser(rowFn, config) {
       // after is position after the quote found
       // it is expected to be of a field separator
       let after = pos + quotlen;
-      while (after < raw.length) {
-        ch = raw.slice(after, after + feplen);
-        // most probable
-        if (ch === fep) {
-          pos = after + feplen;
+      // TODO this is wrong!!! must be redone
+      ch = raw.slice(after, after + feplen);
+      // most probable
+      if (ch === fep) {
+        pos = after + feplen;
+        after = pos;
+      } else {
+        let after0 = after;
+
+        // maybe an eol? the next most probable sequence to be
+        ch = raw.slice(after, after + eollen);
+        if (ch == eol) {
+          pos = after + eollen;
           after = pos;
         } else {
-          let after0 = after;
-
-          // maybe an eol? the next most probable sequence to be
-          ch = raw.slice(after, after + eollen);
-          if (ch == eol) {
-            pos = after + eollen;
-            after = pos;
-          } else {
-            // here ch is not fep oe eol
-            // TODO surroundingSpace is always true
-            if (!surroundingSpace) {
-              // maybe some eroneous white spaces
-              ch = raw.slice(after, after + 1);
-              // eat all ws if any
-              while (ch === " ") {
-                after++;
-                ch = raw.slice(after, after + 1);
-              }
-              //
-              if (ch === fep) {
-                after = after + feplen;
-                pos = after;
-              } else if (ch === eol) {
-                after = after + eollen;
-                pos = after;
-              }
-              if (["", fep, eol].includes(ch)) {
-                break;
-              }
-            }
-            // maybe we found a quote
-            while (ch === quote) {
-              after += quotlen;
-              ch = raw.slice(after, after + quotlen);
-            }
-            // no significant sequence so far
-            let after0 = raw.indexOf(quote, after);
-            if (after0 !== -1) {
-              after = after0;
-            } else {
+          // here ch is not fep oe eol
+          // TODO surroundingSpace is always true
+          if (!surroundingSpace) {
+            // maybe some eroneous white spaces
+            ch = raw.slice(after, after + 1);
+            // eat all ws if any
+            while (ch === " ") {
               after++;
+              ch = raw.slice(after, after + 1);
+            }
+            //
+            if (ch === fep) {
+              after = after + feplen;
+              pos = after;
+            } else if (ch === eol) {
+              after = after + eollen;
+              pos = after;
+            }
+            if (["", fep, eol].includes(ch)) {
+              break;
             }
           }
-        }
-
-        // raw is too short, need more raw
-        if (ch === "") {
-          rest = raw.slice(at);
-          if (!clarified) {
-            pos -= at;
-            return;
+          // maybe we found a quote
+          while (ch === quote) {
+            after += quotlen;
+            ch = raw.slice(after, after + quotlen);
           }
-
-          pos = rest.length;
-          return;
+          // no significant sequence so far
+          let after0 = raw.indexOf(quote, after);
+          if (after0 !== -1) {
+            after = after0;
+          } else {
+            after++;
+          }
         }
       }
+
+      // raw is too short, need more raw
+      if (ch === "") {
+        rest = raw.slice(at);
+        if (!clarified) {
+          pos -= at;
+          return;
+        }
+
+        pos = rest.length;
+        return;
+      }
+
       after = pos + quotlen;
 
       field = raw.slice(at, pos);
@@ -274,7 +274,7 @@ function getCSVFieldsParser(rowFn, config) {
 
       ch = field.slice(-1 * eol.length);
       if (ch === eol) {
-        row.push(field.slice(quotlen, 1 * (quotlen + quotlen)));
+        row.push(field.slice(quotlen, -1 * (quotlen + eollen)));
         rowFn([row, errors]);
         numLine++;
         row = [];

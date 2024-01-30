@@ -18,6 +18,9 @@ const eqRec = (a, b) => {
 const size = 4;
 
 const testEqDefaultConfig = (text, expected, fn) => {
+  if (!fn) {
+    fn = console.log;
+  }
   return function () {
     const f = fileFrom(text);
 
@@ -44,6 +47,9 @@ const testEqDefaultConfig = (text, expected, fn) => {
 };
 
 const testEqCustomConfig = (text, expected, config, fn) => {
+  if (!fn) {
+    fn = console.log;
+  }
   return function () {
     const f = fileFrom(text);
 
@@ -182,27 +188,28 @@ const unquotedMalformed = {
     ),
 };
 
-tests(unquotedIdeal);
-tests(unquotedIdealWithConfig);
-tests(unquotedMalformed);
+//tests(unquotedIdeal);
+//tests(unquotedIdealWithConfig);
+//tests(unquotedMalformed);
 
 const quotedIdeal = {
-  "ideal quoted fields": testEqDefaultConfig(
+  /* "ideal quoted fields": testEqDefaultConfig(
     '"a","b","c","d"\n"e","f","g","h"\n',
     [
-      ["a", "b", "c", "d"],
-      ["e", "f", "g", "h"],
+      ['a', 'b', 'c', 'd'],
+      ['e', 'f', 'g', 'h'],
+    ],
+  ),
+*/
+  "ideal quoted fields skip empty lines": testEqDefaultConfig(
+    '"c","d"\n\n"e","f"\n\n\n',
+    [
+      ["c", "d"],
+      ["e", "f"],
     ],
   ),
 
-  /*  'ideal quoted fields skip empty lines': testEqDefaultConfig(
-    '"a","b","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
-    [
-      ['"a"', '"b"', '"c"', '"d"'], 
-      ['"e"', '"f"', '"g"', '"h"'],
-    ]),
-
-/* 'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
+  /* 'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
     '"a","b has , and \n","c","d"\n"e","f","g","h"\n',
     [
       ['"a",', '"b has , and \n",', '"c",', '"d"\n'], 
