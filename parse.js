@@ -269,12 +269,12 @@ function getCSVFieldsParser(rowFn, config) {
 
       field = raw.slice(at, pos);
       if (field.slice(-1 * feplen) === fep) {
-        row.push(field.slice(0, -1 * feplen));
+        row.push(field.slice(quotlen, -1 * (quotlen + feplen)));
       }
 
       ch = field.slice(-1 * eol.length);
       if (ch === eol) {
-        row.push(field.slice(0, -1 * eollen));
+        row.push(field.slice(quotlen, 1 * (quotlen + quotlen)));
         rowFn([row, errors]);
         numLine++;
         row = [];
