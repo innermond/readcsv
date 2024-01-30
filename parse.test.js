@@ -197,22 +197,22 @@ tests(unquotedIdeal);
 tests(unquotedIdealWithConfig);
 tests(unquotedMalformed);
 
-/*const quotedIdeal = {
+const quotedIdeal = {
   'ideal quoted fields': testEqDefaultConfig(
     '"a","b","c","d"\n"e","f","g","h"\n',
     [
-      ['"a",', '"b",', '"c",', '"d"\n'], 
-      ['"e",', '"f",', '"g",', '"h"\n'],
+      ['"a"', '"b"', '"c"', '"d"'], 
+      ['"e"', '"f"', '"g"', '"h"'],
     ]),
 
-  'ideal quoted fields skip empty lines': testEqDefaultConfig(
+/*  'ideal quoted fields skip empty lines': testEqDefaultConfig(
     '"a","b","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
     [
       ['"a",', '"b",', '"c",', '"d"\n'], 
       ['"e",', '"f",', '"g",', '"h"\n'],
     ]),
 
-  'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
+/* 'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
     '"a","b has , and \n","c","d"\n"e","f","g","h"\n',
     [
       ['"a",', '"b has , and \n",', '"c",', '"d"\n'], 
@@ -246,7 +246,7 @@ tests(unquotedMalformed);
       ['      "a" ,', ' "b" ,', ' "c",', ' "d"     \n'], 
       ['"e"     ,', '    "f" ,', ' "g",', '    "h"\n'],
     ]),
+    */
 };
 
 tests(quotedIdeal);
-*/
