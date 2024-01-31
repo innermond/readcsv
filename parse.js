@@ -70,11 +70,21 @@ function getCSVFieldsParser(rowFn, config) {
   let pos = 0;
   let ch;
 
+  // only for quoted fields that contains escaped double quotes
+  let buf = "";
+
   function parseCSVChunk(chunk) {
     raw = rest + chunk;
     rest = "";
 
     if (chunkFirst) {
+      if (!surroundingSpace) {
+        while (ch === " ") {
+          pos++;
+          at = pos;
+          ch = raw.slice(pos, pos + 1);
+        }
+      }
       ch = raw.slice(at, at + quotlen);
       quoted = ch === quote;
       if (quoted) {
@@ -197,75 +207,75 @@ function getCSVFieldsParser(rowFn, config) {
         }
         clarified = false;
       }
-      // pos is of the found quote
+
+      //console.log(at, pos, ch)
       // after is position after the quote found
       // it is expected to be of a field separator
-      let after = pos + quotlen;
-      // TODO this is wrong!!! must be redone
-      ch = raw.slice(after, after + feplen);
-      // most probable
-      if (ch === fep) {
-        pos = after + feplen;
-        after = pos;
-      } else {
-        let after0 = after;
+      do {
+        let after = pos + quotlen;
+        ch = raw.slice(after, after + feplen);
+        if (ch === "") {
+          pos = after - quotlen;
+          break;
+        }
+
+        // most probable
+        if (ch === fep) {
+          pos = after + feplen;
+          after = pos;
+          break;
+        }
 
         // maybe an eol? the next most probable sequence to be
         ch = raw.slice(after, after + eollen);
         if (ch == eol) {
           pos = after + eollen;
           after = pos;
-        } else {
-          // here ch is not fep oe eol
-          // TODO surroundingSpace is always true
-          if (!surroundingSpace) {
-            // maybe some eroneous white spaces
-            ch = raw.slice(after, after + 1);
-            // eat all ws if any
-            while (ch === " ") {
-              after++;
-              ch = raw.slice(after, after + 1);
-            }
-            //
-            if (ch === fep) {
-              after = after + feplen;
-              pos = after;
-            } else if (ch === eol) {
-              after = after + eollen;
-              pos = after;
-            }
-            if (["", fep, eol].includes(ch)) {
-              break;
-            }
-          }
-          // maybe we found a quote
-          while (ch === quote) {
-            after += quotlen;
-            ch = raw.slice(after, after + quotlen);
-          }
-          // no significant sequence so far
-          let after0 = raw.indexOf(quote, after);
-          if (after0 !== -1) {
-            after = after0;
-          } else {
+          break;
+        }
+
+        // maybe we found a quote. it is an escaped or an ending one?
+        while (ch === quote) {
+          after += quotlen;
+          ch = raw.slice(after, after + quotlen);
+        }
+        after = raw.indexOf(quote, after);
+        if (after === -1) {
+          rest = raw;
+          after = raw.length;
+          pos = after - quotlen;
+          return;
+        }
+        while (ch === quote) {
+          after += quotlen;
+          ch = raw.slice(after, after + quotlen);
+        }
+
+        // here ch is not fep or eol or quote
+        if (!surroundingSpace && ch === " ") {
+          // maybe some eroneous white spaces
+          ch = raw.slice(after, after + 1);
+          // eat all ws if any
+          while (ch === " ") {
             after++;
+            ch = raw.slice(after, after + 1);
           }
         }
-      }
+        pos = after - quotlen;
+      } while (true);
 
       // raw is too short, need more raw
       if (ch === "") {
         rest = raw.slice(at);
         if (!clarified) {
           pos -= at;
+          at = 0;
           return;
         }
 
         pos = rest.length;
         return;
       }
-
-      after = pos + quotlen;
 
       field = raw.slice(at, pos);
       if (field.slice(-1 * feplen) === fep) {
@@ -281,7 +291,6 @@ function getCSVFieldsParser(rowFn, config) {
         errors = [];
       }
 
-      pos = after;
       inside = false;
       at = pos;
       clarified = true;

@@ -200,7 +200,7 @@ const quotedIdeal = {
       ['e', 'f', 'g', 'h'],
     ],
   ),
-*/
+
   "ideal quoted fields skip empty lines": testEqDefaultConfig(
     '"c","d"\n\n"e","f"\n\n\n',
     [
@@ -208,15 +208,30 @@ const quotedIdeal = {
       ["e", "f"],
     ],
   ),
-
-  /* 'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
+ 'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
     '"a","b has , and \n","c","d"\n"e","f","g","h"\n',
     [
-      ['"a",', '"b has , and \n",', '"c",', '"d"\n'], 
-      ['"e",', '"f",', '"g",', '"h"\n'],
+      ['a', 'b has , and \n', 'c', 'd'], 
+      ['e', 'f', 'g', 'h'],
     ]),
 
-  'ideal quoted fields containing new lines and commas skip empty lines': testEqDefaultConfig(
+*/
+  "ideal quoted fields containing quotes": testEqDefaultConfig(
+    '"a","b has and ""a"" b","""c""","d"\n"e","f","g","h"\n',
+    [
+      ["a", 'b has and ""a"" b', '""c""', "d"],
+      ["e", "f", "g", "h"],
+    ],
+  ),
+  /*
+ 'ideal quoted fields containing quotes and new lines and commas': testEqDefaultConfig(
+    '"a","b has , and ""\n""","""c is quoted""","d"\n"e","f","g","h"\n',
+    [
+      ['a', 'b has , and ""\n""', 'c', 'd'], 
+      ['e', 'f', 'g', 'h'],
+    ]),
+
+   /* 'ideal quoted fields containing new lines and commas skip empty lines': testEqDefaultConfig(
     '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
     [
       ['"a",', '"b has , and \n",', '"c",', '"d"\n'], 
