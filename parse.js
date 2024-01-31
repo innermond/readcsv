@@ -70,8 +70,8 @@ function getCSVFieldsParser(rowFn, config) {
   let pos = 0;
   let ch;
 
-  // only for quoted fields that contains escaped double quotes
-  let buf = "";
+  // counting consecutives quotes
+  let qinx = 0;
 
   function parseCSVChunk(chunk) {
     raw = rest + chunk;
@@ -195,7 +195,9 @@ function getCSVFieldsParser(rowFn, config) {
       }
 
       // we are inside quotes
+      // and found a quote above
       // find next quote only if status of actual quote is clarified
+      let isOpeningQuote = false;
       if (clarified) {
         // find next quote
         pos = raw.indexOf(quote, pos + quotlen);
@@ -205,13 +207,43 @@ function getCSVFieldsParser(rowFn, config) {
           at = 0;
           return;
         }
+        isOpeningQuote = true;
         clarified = false;
+        qinx = 0;
       }
 
       //console.log(at, pos, ch)
+      // ch = quote (here it arrives unclarified) | another sequence
       // after is position after the quote found
       // it is expected to be of a field separator
       do {
+        const _pos = pos;
+        while (ch === quote) {
+          pos += quotlen;
+          ch = raw.slice(pos, pos + quotlen);
+          qinx++;
+        }
+        if (ch === "") {
+          break;
+        }
+        const consecutiveQuotes = qinx % 2 === 0;
+
+        ch = raw.slice(pos, pos + quotlen);
+        const askMoreQuote = ch !== quote && consecutiveQuotes;
+        if (askMoreQuote) {
+          pos = raw.indexOf(quote, pos + quotlen);
+          if (pos === -1) {
+            rest = raw.slice(at);
+            pos = Math.min(rest.length - quotlen, 0); // save from where to search
+            at = 0;
+            return;
+          }
+          isOpeningQuote = false;
+          qinx = 0;
+          continue;
+        }
+        pos = _pos;
+
         let after = pos + quotlen;
         ch = raw.slice(after, after + feplen);
         if (ch === "") {
@@ -294,6 +326,7 @@ function getCSVFieldsParser(rowFn, config) {
       inside = false;
       at = pos;
       clarified = true;
+      qinx = 0;
     }
     // exhausted raw so refresh its minions
     rest = "";
