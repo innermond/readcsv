@@ -15,7 +15,7 @@ const eqRec = (a, b) => {
   return [!out, inx];
 };
 
-const size = 4;
+const size = 5;
 
 const testEqDefaultConfig = (text, expected, fn) => {
   if (!fn) {
@@ -193,7 +193,8 @@ const unquotedMalformed = {
 //tests(unquotedMalformed);
 
 const quotedIdeal = {
-  /* "ideal quoted fields": testEqDefaultConfig(
+  /*
+  "ideal quoted fields": testEqDefaultConfig(
     '"a","b","c","d"\n"e","f","g","h"\n',
     [
       ['a', 'b', 'c', 'd'],
@@ -201,13 +202,14 @@ const quotedIdeal = {
     ],
   ),
 
-  "ideal quoted fields skip empty lines": testEqDefaultConfig(
+ "ideal quoted fields skip empty lines": testEqDefaultConfig(
     '"c","d"\n\n"e","f"\n\n\n',
     [
       ["c", "d"],
       ["e", "f"],
     ],
-  ),
+  ), 
+
  'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
     '"a","b has , and \n","c","d"\n"e","f","g","h"\n',
     [
@@ -215,50 +217,57 @@ const quotedIdeal = {
       ['e', 'f', 'g', 'h'],
     ]),
 
-*/
   "ideal quoted fields containing quotes": testEqDefaultConfig(
     '"a","b has and ""a"" b","""c""","d"\n"e","f","g","h"\n',
     [
-      ["a", 'b has and ""a"" b', '""c""', "d"],
+      ["a", 'b has and "a" b', '"c"', "d"],
       ["e", "f", "g", "h"],
     ],
   ),
-  /*
+
  'ideal quoted fields containing quotes and new lines and commas': testEqDefaultConfig(
-    '"a","b has , and ""\n""","""c is quoted""","d"\n"e","f","g","h"\n',
+    '"a","b has , and ""\n""","""c"",\n\n,"",","d\n"",\n"\n"""e,,""\n,\n","f","g","h"\n',
     [
-      ['a', 'b has , and ""\n""', 'c', 'd'], 
-      ['e', 'f', 'g', 'h'],
+      ['a', 'b has , and "\n"', '"c",\n\n,",', 'd\n",\n'], 
+      ['"e,,"\n,\n', 'f', 'g', 'h'],
     ]),
 
-   /* 'ideal quoted fields containing new lines and commas skip empty lines': testEqDefaultConfig(
+ 'row with ideal mixed fields': testEqDefaultConfig(
+    '"a",b has and ,"""c"",\n\n,"",",d\n"""e,,""\n,\n",f 1 2,"g","h"\n',
+    [
+      ['a', 'b has and ', '"c",\n\n,",', 'd'], 
+      ['"e,,"\n,\n', 'f 1 2', 'g', 'h'],
+    ]),
+
+   'ideal quoted fields containing new lines and commas skip empty lines': testEqDefaultConfig(
     '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
     [
-      ['"a",', '"b has , and \n",', '"c",', '"d"\n'], 
-      ['"e",', '"f",', '"g",', '"h"\n'],
+      ['a', 'b has , and \n', 'c', 'd'], 
+      ['e', 'f', 'g', 'h'],
     ]),
 
   'ideal quoted fields containing new lines and commas keep empty lines': testEqCustomConfig(
     '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
     [
-      ['"a",', '"b has , and \n",', '"c",', '"d"\n'], 
-      ['\n'],
-      ['\n'],
-      ['"e",', '"f",', '"g",', '"h"\n'],
-      ['\n'],
-      ['\n'],
-      ['\n'],
+      ['a', 'b has , and \n', 'c', 'd'], 
+      [''],
+      [''],
+      ['e', 'f', 'g', 'h'],
+      [''],
+      [''],
+      [''],
     ],
     {skipEmptyLine: false,},
   ),
+*/
 
-  'leading spaces are kept for quoted fields': testEqDefaultConfig(
+  "leading spaces are kept for quoted fields": testEqDefaultConfig(
     '      "a" , "b" , "c", "d"     \n"e"     ,    "f" , "g",    "h"\n',
     [
-      ['      "a" ,', ' "b" ,', ' "c",', ' "d"     \n'], 
-      ['"e"     ,', '    "f" ,', ' "g",', '    "h"\n'],
-    ]),
-    */
+      ["      a ", " b ", " c", " d     "],
+      ["e     ", "    f ", " g", "    h"],
+    ],
+  ),
 };
 
 tests(quotedIdeal);
