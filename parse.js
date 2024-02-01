@@ -133,6 +133,7 @@ function getCSVFieldsParser(rowFn, config) {
         quoted = ch === quote;
         if (quoted) {
           clarified = true;
+          quotedFieldClosed = false;
         } else {
           // keep the white space skipped in search of a quote
           pos = _pos;
@@ -245,16 +246,23 @@ function getCSVFieldsParser(rowFn, config) {
           break;
         }
         const consecutiveQuotes = qinx > 0 && qinx % 2 === 0;
-
+        const fepmaybe = raw.slice(pos, pos + feplen);
+        if (!consecutiveQuotes && fepmaybe === fep) {
+          pos += feplen;
+          break;
+        }
+        const eolmaybe = raw.slice(pos, pos + eollen);
+        if (!consecutiveQuotes && eolmaybe === eol) {
+          pos += eollen;
+          break;
+        }
         ch = raw.slice(pos, pos + quotlen);
-        let askMoreQuote = consecutiveQuotes
-          ? ch !== quote
-          : ch !== quote && ch !== fep && ch !== eol;
+        let askMoreQuote = consecutiveQuotes && ch !== quote;
+
         if (!quotedFieldClosed && ch === eol) {
           askMoreQuote = true;
         }
         if (askMoreQuote) {
-          qinx = 0;
           pos = raw.indexOf(quote, pos + quotlen);
           if (pos === -1) {
             rest = raw;
