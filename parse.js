@@ -72,6 +72,18 @@ function getCSVFieldsParser(rowFn, config) {
 
   // counting consecutives quotes
   let qinx = 0;
+  // when parsing a quoted field to know when is done
+  let quotedFieldClosed = false;
+
+  function skip(seq, x) {
+    let seqlen = seq.length;
+    let seqmaybe = raw.slice(x, x + seqlen);
+    while (seqmaybe === seq) {
+      x += seqlen;
+      seqmaybe = raw.slice(x, x + seqlen);
+    }
+    return x;
+  }
 
   function parseCSVChunk(chunk) {
     raw = rest + chunk;
@@ -92,6 +104,7 @@ function getCSVFieldsParser(rowFn, config) {
       }
       inside = true;
       chunkFirst = false;
+      quotedFieldClosed = false;
     }
 
     // parsing loop
@@ -124,6 +137,7 @@ function getCSVFieldsParser(rowFn, config) {
           // keep the white space skipped in search of a quote
           pos = _pos;
           at = pos;
+          clarified = false;
         }
         inside = true;
       }
@@ -197,7 +211,6 @@ function getCSVFieldsParser(rowFn, config) {
       // we are inside quotes
       // and found a quote above
       // find next quote only if status of actual quote is clarified
-      let isOpeningQuote = false;
       if (clarified) {
         // find next quote
         pos = raw.indexOf(quote, pos + quotlen);
@@ -207,7 +220,6 @@ function getCSVFieldsParser(rowFn, config) {
           at = 0;
           return;
         }
-        isOpeningQuote = true;
         clarified = false;
         qinx = 0;
       }
@@ -218,33 +230,41 @@ function getCSVFieldsParser(rowFn, config) {
       // it is expected to be of a field separator
       do {
         const _pos = pos;
+        ch = raw.slice(pos, pos + quotlen);
         while (ch === quote) {
+          qinx++;
           pos += quotlen;
           ch = raw.slice(pos, pos + quotlen);
-          qinx++;
+        }
+        if (pos !== _pos) {
+          // have entered prev while
+          pos -= quotlen; // last increment in prev while did not found a quote so we decrement back
+          pos++; // but move it for the next char
         }
         if (ch === "") {
           break;
         }
-        const consecutiveQuotes = qinx % 2 === 0;
+        const consecutiveQuotes = qinx > 0 && qinx % 2 === 0;
 
         ch = raw.slice(pos, pos + quotlen);
-        const askMoreQuote = ch !== quote && consecutiveQuotes;
+        let askMoreQuote = consecutiveQuotes
+          ? ch !== quote
+          : ch !== quote && ch !== fep && ch !== eol;
+        if (!quotedFieldClosed && ch === eol) {
+          askMoreQuote = true;
+        }
         if (askMoreQuote) {
+          qinx = 0;
           pos = raw.indexOf(quote, pos + quotlen);
           if (pos === -1) {
-            rest = raw.slice(at);
-            pos = Math.min(rest.length - quotlen, 0); // save from where to search
-            at = 0;
+            rest = raw;
+            pos = raw.length;
             return;
           }
-          isOpeningQuote = false;
-          qinx = 0;
           continue;
         }
-        pos = _pos;
 
-        let after = pos + quotlen;
+        let after = pos;
         ch = raw.slice(after, after + feplen);
         if (ch === "") {
           pos = after - quotlen;
@@ -326,6 +346,7 @@ function getCSVFieldsParser(rowFn, config) {
       inside = false;
       at = pos;
       clarified = true;
+      quotedFieldClosed = true;
       qinx = 0;
     }
     // exhausted raw so refresh its minions
