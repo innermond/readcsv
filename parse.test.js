@@ -188,34 +188,35 @@ const unquotedMalformed = {
     ),
 };
 
-//tests(unquotedIdeal);
-//tests(unquotedIdealWithConfig);
-//tests(unquotedMalformed);
+tests(unquotedIdeal);
+tests(unquotedIdealWithConfig);
+tests(unquotedMalformed);
 
 const quotedIdeal = {
-  /*
+  /**/
   "ideal quoted fields": testEqDefaultConfig(
     '"a","b","c","d"\n"e","f","g","h"\n',
     [
-      ['a', 'b', 'c', 'd'],
-      ['e', 'f', 'g', 'h'],
+      ["a", "b", "c", "d"],
+      ["e", "f", "g", "h"],
     ],
   ),
 
- "ideal quoted fields skip empty lines": testEqDefaultConfig(
+  "ideal quoted fields skip empty lines": testEqDefaultConfig(
     '"c","d"\n\n"e","f"\n\n\n',
     [
       ["c", "d"],
       ["e", "f"],
     ],
-  ), 
+  ),
 
- 'ideal quoted fields containing new lines and commas': testEqDefaultConfig(
+  "ideal quoted fields containing new lines and commas": testEqDefaultConfig(
     '"a","b has , and \n","c","d"\n"e","f","g","h"\n',
     [
-      ['a', 'b has , and \n', 'c', 'd'], 
-      ['e', 'f', 'g', 'h'],
-    ]),
+      ["a", "b has , and \n", "c", "d"],
+      ["e", "f", "g", "h"],
+    ],
+  ),
 
   "ideal quoted fields containing quotes": testEqDefaultConfig(
     '"a","b has and ""a"" b","""c""","d"\n"e","f","g","h"\n',
@@ -225,48 +226,63 @@ const quotedIdeal = {
     ],
   ),
 
- 'ideal quoted fields containing quotes and new lines and commas': testEqDefaultConfig(
-    '"a","b has , and ""\n""","""c"",\n\n,"",","d\n"",\n"\n"""e,,""\n,\n","f","g","h"\n',
-    [
-      ['a', 'b has , and "\n"', '"c",\n\n,",', 'd\n",\n'], 
-      ['"e,,"\n,\n', 'f', 'g', 'h'],
-    ]),
+  "ideal quoted fields containing quotes and new lines and commas":
+    testEqDefaultConfig(
+      '"a","b has , and ""\n""","""c"",\n\n,"",","d\n"",\n"\n"""e,,""\n,\n","f","g","h"\n',
+      [
+        ["a", 'b has , and "\n"', '"c",\n\n,",', 'd\n",\n'],
+        ['"e,,"\n,\n', "f", "g", "h"],
+      ],
+    ),
 
- 'row with ideal mixed fields': testEqDefaultConfig(
+  "row with ideal mixed fields": testEqDefaultConfig(
     '"a",b has and ,"""c"",\n\n,"",",d\n"""e,,""\n,\n",f 1 2,"g","h"\n',
     [
-      ['a', 'b has and ', '"c",\n\n,",', 'd'], 
-      ['"e,,"\n,\n', 'f 1 2', 'g', 'h'],
-    ]),
-
-   'ideal quoted fields containing new lines and commas skip empty lines': testEqDefaultConfig(
-    '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
-    [
-      ['a', 'b has , and \n', 'c', 'd'], 
-      ['e', 'f', 'g', 'h'],
-    ]),
-
-  'ideal quoted fields containing new lines and commas keep empty lines': testEqCustomConfig(
-    '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
-    [
-      ['a', 'b has , and \n', 'c', 'd'], 
-      [''],
-      [''],
-      ['e', 'f', 'g', 'h'],
-      [''],
-      [''],
-      [''],
+      ["a", "b has and ", '"c",\n\n,",', "d"],
+      ['"e,,"\n,\n', "f 1 2", "g", "h"],
     ],
-    {skipEmptyLine: false,},
   ),
-*/
 
-  "leading spaces are kept for quoted fields": testEqDefaultConfig(
+  "ideal quoted fields containing new lines and commas skip empty lines":
+    testEqDefaultConfig(
+      '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
+      [
+        ["a", "b has , and \n", "c", "d"],
+        ["e", "f", "g", "h"],
+      ],
+    ),
+
+  "ideal quoted fields containing new lines and commas keep empty lines":
+    testEqCustomConfig(
+      '"a","b has , and \n","c","d"\n\n\n"e","f","g","h"\n\n\n\n',
+      [
+        ["a", "b has , and \n", "c", "d"],
+        [""],
+        [""],
+        ["e", "f", "g", "h"],
+        [""],
+        [""],
+        [""],
+      ],
+      { skipEmptyLine: false },
+    ),
+  /**/
+  "outside spaces are discarded for quoted fields": testEqCustomConfig(
     '      "a" , "b" , "c", "d"     \n"e"     ,    "f" , "g",    "h"\n',
     [
-      ["      a ", " b ", " c", " d     "],
-      ["e     ", "    f ", " g", "    h"],
+      ["a", "b", "c", "d"],
+      ["e", "f", "g", "h"],
     ],
+    { surroundingSpace: false },
+  ),
+  "outside spaced with new lines, commas and quotes inside": testEqCustomConfig(
+    '      "a,\n""" , ",\n\n,,""0""b  " , "c", "d"",\n"     \n"""""e"",\n"     ,    ",f"",""\n" , "\n""\n"",g\n"",""\n" ,    "h"\n',
+    [
+      ['a,\n"', ',\n\n,,"0"b  ', "c", 'd",\n'],
+      ['""e",\n', ',f","\n', '\n"\n",g\n","\n', "h"],
+      [""],
+    ],
+    { surroundingSpace: false },
   ),
 };
 

@@ -91,6 +91,7 @@ function getCSVFieldsParser(rowFn, config) {
 
     if (chunkFirst) {
       if (!surroundingSpace) {
+        ch = raw.slice(pos, pos + 1); // check for space
         while (ch === " ") {
           pos++;
           at = pos;
@@ -98,6 +99,11 @@ function getCSVFieldsParser(rowFn, config) {
         }
       }
       ch = raw.slice(at, at + quotlen);
+      if (ch === "") {
+        pos = 0;
+        at = pos;
+        return;
+      }
       quoted = ch === quote;
       if (quoted) {
         clarified = true;
@@ -128,6 +134,12 @@ function getCSVFieldsParser(rowFn, config) {
             at = pos;
             ch = raw.slice(pos, pos + 1);
           }
+        }
+        if (ch === "") {
+          rest = raw.slice(at);
+          at = 0;
+          pos = rest.length;
+          return;
         }
 
         quoted = ch === quote;
@@ -272,56 +284,7 @@ function getCSVFieldsParser(rowFn, config) {
           continue;
         }
 
-        let after = pos;
-        ch = raw.slice(after, after + feplen);
-        if (ch === "") {
-          pos = after - quotlen;
-          break;
-        }
-
-        // most probable
-        if (ch === fep) {
-          pos = after + feplen;
-          after = pos;
-          break;
-        }
-
-        // maybe an eol? the next most probable sequence to be
-        ch = raw.slice(after, after + eollen);
-        if (ch == eol) {
-          pos = after + eollen;
-          after = pos;
-          break;
-        }
-
-        // maybe we found a quote. it is an escaped or an ending one?
-        while (ch === quote) {
-          after += quotlen;
-          ch = raw.slice(after, after + quotlen);
-        }
-        after = raw.indexOf(quote, after);
-        if (after === -1) {
-          rest = raw;
-          after = raw.length;
-          pos = after - quotlen;
-          return;
-        }
-        while (ch === quote) {
-          after += quotlen;
-          ch = raw.slice(after, after + quotlen);
-        }
-
-        // here ch is not fep or eol or quote
-        if (!surroundingSpace && ch === " ") {
-          // maybe some eroneous white spaces
-          ch = raw.slice(after, after + 1);
-          // eat all ws if any
-          while (ch === " ") {
-            after++;
-            ch = raw.slice(after, after + 1);
-          }
-        }
-        pos = after - quotlen;
+        pos++;
       } while (true);
 
       // raw is too short, need more raw
@@ -339,11 +302,21 @@ function getCSVFieldsParser(rowFn, config) {
 
       field = raw.slice(at, pos).replaceAll(quote + quote, quote);
       if (field.slice(-1 * feplen) === fep) {
-        row.push(field.slice(quotlen, -1 * (quotlen + feplen)));
+        row.push(
+          field
+            .slice(quotlen, -1 * feplen)
+            .trim()
+            .slice(0, -1 * quotlen),
+        );
       } else {
         ch = field.slice(-1 * eol.length);
         if (ch === eol) {
-          row.push(field.slice(quotlen, -1 * (quotlen + eollen)));
+          row.push(
+            field
+              .slice(quotlen, -1 * eollen)
+              .trim()
+              .slice(0, -1 * quotlen),
+          );
           rowFn([row, errors]);
           numLine++;
           row = [];

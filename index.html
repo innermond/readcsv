@@ -38,7 +38,7 @@
             console.dir(performance.getEntriesByName("parsing-csv")[0]);
             console.log(n);
           },
-          { skipEmptyLine: true, surroundingSpace: true },
+          { skipEmptyLine: true, surroundingSpace: false },
         );
         //{skipEmptyLine: false, surroundingSpace: false,});
         performance.mark("start-parsing-csv");
