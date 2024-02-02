@@ -305,7 +305,7 @@ function getCSVFieldsParser(rowFn, config) {
         row.push(
           field
             .slice(quotlen, -1 * feplen)
-            .trim()
+            .trimEnd()
             .slice(0, -1 * quotlen),
         );
       } else {
@@ -314,7 +314,7 @@ function getCSVFieldsParser(rowFn, config) {
           row.push(
             field
               .slice(quotlen, -1 * eollen)
-              .trim()
+              .trimEnd()
               .slice(0, -1 * quotlen),
           );
           rowFn([row, errors]);
