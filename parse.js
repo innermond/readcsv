@@ -348,3 +348,79 @@ function getCSVFieldsParser(rowFn, config) {
 
   return parseCSVChunk;
 }
+
+function slice(arr, start, end) {
+  let result = [];
+  let part = [];
+  let len = 0;
+
+  if (end === undefined) end = Number.MAX_SAFE_INTEGER;
+
+  const reverse = start < 0 || end < 0;
+  if (reverse) {
+    const allen = arr.reduce((acc, v) => (acc += v.length), 0);
+
+    if (end < 0) end = allen + end;
+    if (start < 0) start = allen + start;
+
+    const _start = Math.min(start, end);
+    end = Math.max(start, end);
+    start = _start;
+  }
+
+  for (let i = 0; i < arr.length; i++) {
+    const arrlen = arr[i].length;
+    len += arrlen;
+
+    if (end <= 0) {
+      continue;
+    }
+
+    if (start < len) {
+      part = arr[i].slice(start, end);
+      result.push(part);
+      start -= part.length + 1;
+    } else {
+      start -= arrlen;
+    }
+    if (start < 0) start = 0;
+    end -= arrlen;
+  }
+
+  return result;
+}
+
+function indexOf(arr, s, start = 0) {
+  const lens = [];
+  const allen = arr.reduce((acc, v) => {
+    const curr = (acc += v.length);
+    lens.push(curr);
+    return curr;
+  }, 0);
+
+  if (start > allen) {
+    return -1;
+  }
+  if (start < 0) {
+    start = allen + start;
+  }
+
+  lens.push(start);
+  const arrinx = lens.sort((a, b) => a - b).indexOf(start);
+
+  let pos = 0;
+  pos = lens[arrinx - 1] ?? 0;
+  start -= pos;
+  for (let i = arrinx; i < arr.length; i++) {
+    const inx = arr[i].indexOf(s, start);
+
+    if (inx !== -1) {
+      return pos + inx;
+    }
+
+    start = 0; // Reset for subsequent
+    pos += arr[i].length; // Keep how much we left behind
+  }
+
+  return -1;
+}

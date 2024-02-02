@@ -18,14 +18,14 @@
       $fh.addEventListener("input", async () => {
         performance.clearMarks();
         performance.clearMeasures();
-        const size = 4; //1024*1024*10;
+        const size = 1024 * 1024 * 10;
         const f = $fh.files[0];
         let n = 0;
         readfile(
           f,
           size,
           ([row, err]) => {
-            console.log(row, err);
+            //console.log(row, err);
             n++;
           },
           () => {
