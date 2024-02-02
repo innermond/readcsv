@@ -356,10 +356,15 @@ function slice(arr, start, end) {
 
   if (end === undefined) end = Number.MAX_SAFE_INTEGER;
 
+  const lens = [];
+  const allen = arr.reduce((acc, v) => {
+    const curr = (acc += v.length);
+    lens.push(curr);
+    return curr;
+  }, 0);
+
   const reverse = start < 0 || end < 0;
   if (reverse) {
-    const allen = arr.reduce((acc, v) => (acc += v.length), 0);
-
     if (end < 0) end = allen + end;
     if (start < 0) start = allen + start;
 
@@ -368,7 +373,13 @@ function slice(arr, start, end) {
     start = _start;
   }
 
-  for (let i = 0; i < arr.length; i++) {
+  lens.push(start);
+  const arrinx = lens.sort((a, b) => a - b).indexOf(start);
+
+  let pos = 0;
+  pos = lens[arrinx - 1] ?? 0;
+  start -= pos;
+  for (let i = arrinx; i < arr.length; i++) {
     const arrlen = arr[i].length;
     len += arrlen;
 
