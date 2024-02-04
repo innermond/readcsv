@@ -13,11 +13,13 @@
     <script type="module" src="parse.js"></script>
     <script type="module">
       import readfile from "./parse.js";
+      import RecordByRecord from "./readrecords.js";
 
       const $fh = document.querySelector("#fh");
       $fh.addEventListener("input", async () => {
         performance.clearMarks();
         performance.clearMeasures();
+        performance.mark("+all");
         const size = 1024 * 1024 * 10;
         const f = $fh.files[0];
         let n = 0;
@@ -29,13 +31,9 @@
             n++;
           },
           () => {
-            performance.mark("end-parsing-csv");
-            performance.measure(
-              "parsing-csv",
-              "start-parsing-csv",
-              "end-parsing-csv",
-            );
-            console.dir(performance.getEntriesByName("parsing-csv")[0]);
+            performance.mark("-all");
+            performance.measure("all", "+all", "-all");
+            report(["all", "onload"]);
             console.log(n);
           },
           { skipEmptyLine: true, surroundingSpace: false },
@@ -43,12 +41,45 @@
         //{skipEmptyLine: false, surroundingSpace: false,});
         performance.mark("start-parsing-csv");
       });
-
+      /*$fh.addEventListener("input", async () => {
+        performance.clearMarks();
+        performance.clearMeasures();
+        const size = 1024 * 1024 * 10;
+        const f = $fh.files[0];
+        let n = 0;
+        performance.mark("+all");
+        const rows = RecordByRecord(f, size, { skipEmptyLine: true, surroundingSpace: false });
+        let row, err;
+        for await ( [row, err] of rows) {
+          n++;
+          //console.log(row, err)
+        }
+        performance.mark("-all");
+        performance.measure(
+          "all",
+          "+all",
+          "-all",
+        );
+        const [name, sum, avg] = tt("all");
+        console.log(`${name}: sum ${sum} / avg ${avg}`)
+      })
+*/
       function tt(name) {
         const ee = performance.getEntriesByName(name);
         const sum = ee.reduce((acc, v) => acc + v.duration, 0);
         const avg = sum / ee.length;
-        return [name, sum / 1000, avg];
+        return [name, sum, avg];
+      }
+
+      function report(names) {
+        var sum = 0;
+        var avg = 0;
+
+        const eee = performance.getEntries();
+        names.forEach((name) => {
+          [, sum, avg] = tt(name);
+          console.log(`${name}: sum ${sum} / avg ${avg}`);
+        });
       }
     </script>
   </body>

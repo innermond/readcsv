@@ -3,7 +3,9 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
   let offset = 0;
   const parser = getCSVFieldsParser(doFn, config);
 
-  r.onload = function (evt) {
+  const onload = function (evt) {
+    performance.mark("+onload");
+
     const chunk = evt.target.result;
 
     parser(chunk);
@@ -11,14 +13,22 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
     offset += chunk.length;
     if (offset < file.size) {
       readNextChunk();
+      performance.mark("-onload");
+      performance.measure("onload", "+onload", "-onload");
     } else {
       endFn();
+      r.removeEventListener("load", onload);
+      r.removeEventListener("error", onerror);
+      //const avg = rawlens.reduce((acc, v) => acc += v, 0)
+      //console.log(rawlens, avg/rawlens.length);
     }
   };
+  r.addEventListener("load", onload);
 
-  r.onerror = function () {
+  const onerror = function () {
     console.log(r.error);
   };
+  r.addEventListener("error", onerror);
 
   function readNextChunk() {
     const blob = file.slice(offset, offset + chunksize);
@@ -27,6 +37,7 @@ export default function readfile(file, chunksize, doFn, endFn, config) {
 
   readNextChunk();
 }
+var rawlens = [];
 
 function getCSVFieldsParser(rowFn, config) {
   if (config?.constructor === Object) {
@@ -75,19 +86,10 @@ function getCSVFieldsParser(rowFn, config) {
   // when parsing a quoted field to know when is done
   let quotedFieldClosed = false;
 
-  function skip(seq, x) {
-    let seqlen = seq.length;
-    let seqmaybe = raw.slice(x, x + seqlen);
-    while (seqmaybe === seq) {
-      x += seqlen;
-      seqmaybe = raw.slice(x, x + seqlen);
-    }
-    return x;
-  }
-
   function parseCSVChunk(chunk) {
     raw = rest + chunk;
     rest = "";
+    rawlens.push(raw.length);
 
     if (chunkFirst) {
       if (!surroundingSpace) {
@@ -349,11 +351,19 @@ function getCSVFieldsParser(rowFn, config) {
   return parseCSVChunk;
 }
 
+function strbuf(str) {
+  const buf = [];
+  buf.slice = (start, end) => slice(buf, start, end);
+  buf.indexOf = (s, start) => indexOf(buf, s, start);
+  return buf;
+}
+
 function slice(arr, start, end) {
   let result = [];
   let part = [];
   let len = 0;
 
+  if (start === undefined) start = 0;
   if (end === undefined) end = Number.MAX_SAFE_INTEGER;
 
   const lens = [];
